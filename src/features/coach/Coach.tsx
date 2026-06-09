@@ -3,9 +3,11 @@
  * powered by Gemini for personalized sustainability advice.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../app/store';
 import { getCoachResponse } from '../../services/aiCoach';
+import { safeMarkdownToHtml } from '../../shared/utils/security';
+import { sanitizeInput } from '../../shared/utils/security';
 import { format, parseISO } from 'date-fns';
 import './Coach.css';
 
@@ -23,8 +25,9 @@ export const Coach: React.FC = () => {
     scrollToBottom();
   }, [chatMessages]);
 
-  const handleSend = async (messageText?: string) => {
-    const text = messageText || input.trim();
+  const handleSend = useCallback(async (messageText?: string) => {
+    const rawText = messageText || input.trim();
+    const text = sanitizeInput(rawText);
     if (!text || isChatLoading) return;
 
     addChatMessage(text, 'user');
@@ -42,7 +45,7 @@ export const Coach: React.FC = () => {
     } finally {
       setChatLoading(false);
     }
-  };
+  }, [input, isChatLoading, addChatMessage, setChatLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -104,7 +107,7 @@ export const Coach: React.FC = () => {
                 <div
                   className="message-text"
                   dangerouslySetInnerHTML={{
-                    __html: formatMarkdown(msg.content),
+                    __html: safeMarkdownToHtml(msg.content),
                   }}
                 />
                 {msg.suggestions && msg.suggestions.length > 0 && (
@@ -165,20 +168,4 @@ export const Coach: React.FC = () => {
   );
 };
 
-/**
- * Simple markdown-to-HTML converter for chat messages.
- */
-function formatMarkdown(text: string): string {
-  return text
-    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^\| (.+)$/gm, (match) => {
-      const cells = match.split('|').filter(Boolean).map((c) => c.trim());
-      return `<div class="md-table-row">${cells.map((c) => `<span>${c}</span>`).join('')}</div>`;
-    })
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-    .replace(/\n/g, '<br />');
-}
+/* Markdown rendering is now handled by safeMarkdownToHtml from security utils */

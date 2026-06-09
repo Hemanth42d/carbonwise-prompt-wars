@@ -11,6 +11,7 @@ import {
 import { useAppStore } from '../../app/store';
 import { ACTIVITY_CATEGORIES, EMISSION_FACTORS } from '../../shared/constants';
 import { formatCarbonAmount, roundToDecimals } from '../../shared/utils';
+import { sanitizeInput, sanitizeNumber } from '../../shared/utils/security';
 import type { ActivityCategory } from '../../shared/types';
 import { format, parseISO } from 'date-fns';
 import './Tracker.css';
@@ -136,15 +137,17 @@ export const Tracker: React.FC = () => {
     e.preventDefault();
     const subcats = SUBCATEGORIES[formData.category];
     const subcat = subcats.find((s) => s.label === formData.subcategory);
-    const carbonKg = formData.amount * (subcat?.factor ?? 0);
+    const safeAmount = sanitizeNumber(formData.amount, 0, 100000, 0);
+    if (safeAmount <= 0) return;
+    const carbonKg = safeAmount * (subcat?.factor ?? 0);
 
     addActivity({
       category: formData.category,
-      subcategory: formData.subcategory,
-      description: formData.description || formData.subcategory,
+      subcategory: sanitizeInput(formData.subcategory),
+      description: sanitizeInput(formData.description || formData.subcategory),
       carbonKg: roundToDecimals(carbonKg, 2),
       date: new Date().toISOString(),
-      metadata: { amount: formData.amount },
+      metadata: { amount: safeAmount },
     });
 
     setShowForm(false);

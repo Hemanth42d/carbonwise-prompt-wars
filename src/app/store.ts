@@ -14,16 +14,20 @@ import type {
   CoachMessage,
   CommunityGroup,
   LeaderboardEntry,
-
   SustainabilityReport,
-
 } from '../shared/types';
 import {
   generateDemoFootprintData,
   generateId,
   roundToDecimals,
-
 } from '../shared/utils';
+import { createRateLimiter, sanitizeInput } from '../shared/utils/security';
+
+/**
+ * Rate limiter: max 5 login attempts per 15 minutes.
+ * Prevents brute-force and accidental spam.
+ */
+const loginRateLimiter = createRateLimiter(5, 15 * 60 * 1000);
 
 /* ─── Demo Data Generators ─── */
 
@@ -143,11 +147,14 @@ interface AppState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** Initiate login flow. Rate-limited to 5 attempts per 15 minutes. */
   login: () => void;
+  /** Clear all user state and session data. */
   logout: () => void;
 
   /* Navigation */
   activeSection: string;
+  /** Navigate to a named application section. */
   setActiveSection: (section: string) => void;
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
@@ -155,19 +162,29 @@ interface AppState {
   /* Footprint Data */
   footprintData: DailyFootprint[];
   activities: CarbonActivity[];
+  /**
+   * Record a new carbon activity.
+   * Input is sanitized before storage.
+   */
   addActivity: (activity: Omit<CarbonActivity, 'id' | 'userId'>) => void;
 
   /* Challenges */
   challenges: Challenge[];
+  /** Join a challenge by ID, setting status to active with initial progress. */
   joinChallenge: (challengeId: string) => void;
 
   /* Community */
   communityGroups: CommunityGroup[];
   leaderboard: LeaderboardEntry[];
+  /** Join a community group, incrementing member count. */
   joinGroup: (groupId: string) => void;
 
   /* Coach */
   chatMessages: CoachMessage[];
+  /**
+   * Append a message to the AI coach conversation.
+   * Content is sanitized via the security utilities.
+   */
   addChatMessage: (content: string, role: 'user' | 'assistant', suggestions?: string[]) => void;
   isChatLoading: boolean;
   setChatLoading: (loading: boolean) => void;
@@ -188,6 +205,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   login: () => {
+    /* Rate limiting — prevent brute-force and accidental spam */
+    if (!loginRateLimiter.tryAction()) {
+      console.warn('[EcoSphere] Login rate limit exceeded. Try again in 15 minutes.');
+      return;
+    }
     set({ isLoading: true });
     setTimeout(() => {
       set({
@@ -214,7 +236,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
     }, 800);
   },
-  logout: () => set({ user: null, isAuthenticated: false, footprintData: [], chatMessages: [] }),
+  logout: () => {
+    /* Reset rate limiter on clean logout */
+    loginRateLimiter.reset();
+    set({ user: null, isAuthenticated: false, footprintData: [], chatMessages: [], activities: [] });
+  },
 
   /* Navigation */
   activeSection: 'dashboard',
@@ -228,6 +254,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   addActivity: (activity) => {
     const newActivity: CarbonActivity = {
       ...activity,
+      /* Sanitize all string fields before persisting */
+      description: sanitizeInput(activity.description),
+      subcategory: sanitizeInput(activity.subcategory),
       id: generateId(),
       userId: get().user?.id ?? 'demo',
     };
@@ -262,10 +291,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   /* Coach */
   chatMessages: [],
   addChatMessage: (content, role, suggestions) => {
+    /* Sanitize user-provided content before storing */
+    const safeContent = role === 'user' ? sanitizeInput(content) : content;
     const message: CoachMessage = {
       id: generateId(),
       role,
-      content,
+      content: safeContent,
       timestamp: new Date().toISOString(),
       suggestions,
     };

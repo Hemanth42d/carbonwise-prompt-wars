@@ -7,8 +7,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline
 
-# Copy source and build
+# Copy source, run tests, then build
 COPY . .
+RUN npm run test
 RUN npm run build
 
 # ── Stage 2: Serve ──

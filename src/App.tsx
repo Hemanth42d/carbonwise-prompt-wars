@@ -6,6 +6,7 @@
 import React, { Suspense, lazy } from 'react';
 import { useAppStore } from './app/store';
 import { Sidebar } from './shared/components/Sidebar';
+import { ErrorBoundary } from './shared/components/ErrorBoundary';
 import { Login } from './features/auth/Login';
 import './index.css';
 
@@ -102,16 +103,22 @@ const App: React.FC = () => {
 
   return (
     <div className="app-layout">
+      <a href="#main-content" className="skip-link" aria-label="Skip to main content">
+        Skip to main content
+      </a>
       <Sidebar />
       <Header />
       <main
         className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
         role="main"
         id="main-content"
+        aria-label="Main application content"
       >
-        <Suspense fallback={<PageLoader />}>
-          <ActivePage section={activeSection} />
-        </Suspense>
+        <ErrorBoundary fallbackMessage="This section encountered an error">
+          <Suspense fallback={<PageLoader />}>
+            <ActivePage section={activeSection} />
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

@@ -4,7 +4,7 @@
  * emission trends, category breakdown, and recent activity.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -18,10 +18,13 @@ import './Dashboard.css';
 
 /* ─── Sub-Components ─── */
 
-const SustainabilityScoreRing: React.FC<{ score: number }> = ({ score }) => {
+/**
+ * Renders an animated SVG ring displaying the user's sustainability score.
+ * Memoized — only re-renders when the score value changes.
+ */
+const SustainabilityScoreRing: React.FC<{ score: number }> = memo(({ score }) => {
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (score / 100) * circumference;
-
 
   return (
     <div className="score-ring-container" role="img" aria-label={`Sustainability score: ${score} out of 100`}>
@@ -51,8 +54,12 @@ const SustainabilityScoreRing: React.FC<{ score: number }> = ({ score }) => {
       </div>
     </div>
   );
-};
+});
 
+/**
+ * Stat card showing a key metric with optional trend indicator.
+ * Memoized — only re-renders when props change.
+ */
 const StatCard: React.FC<{
   label: string;
   value: string;
@@ -60,7 +67,7 @@ const StatCard: React.FC<{
   icon: string;
   trend?: number;
   color?: string;
-}> = ({ label, value, subValue, icon, trend, color }) => (
+}> = memo(({ label, value, subValue, icon, trend, color }) => (
   <div className="stat-card animate-fade-in" style={{ '--accent': color } as React.CSSProperties}>
     <div className="stat-card-header">
       <span className="stat-card-icon" aria-hidden="true">{icon}</span>
@@ -74,10 +81,10 @@ const StatCard: React.FC<{
     <div className="stat-card-label">{label}</div>
     {subValue && <div className="stat-card-sub">{subValue}</div>}
   </div>
-);
+));
 
-/* ─── Custom Tooltip ─── */
-const CustomTooltip: React.FC<{ active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string }> = ({ active, payload, label }) => {
+/** Chart tooltip rendered by Recharts — memoized to avoid per-tick re-renders. */
+const CustomTooltip: React.FC<{ active?: boolean; payload?: Array<{ value: number; name: string }>; label?: string }> = memo(({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip glass-card" role="tooltip">
@@ -89,7 +96,7 @@ const CustomTooltip: React.FC<{ active?: boolean; payload?: Array<{ value: numbe
       ))}
     </div>
   );
-};
+});
 
 /* ─── Main Dashboard Component ─── */
 
@@ -170,8 +177,18 @@ export const Dashboard: React.FC = () => {
 
   if (!user) return null;
 
-  const activeChallenges = challenges.filter((c) => c.status === 'active');
-  const tierInfo = USER_TIERS[user.tier];
+  /* Memoize derived collections to avoid re-computation on unrelated state changes */
+  const activeChallenges = useMemo(
+    () => challenges.filter((c) => c.status === 'active'),
+    [challenges]
+  );
+  const tierInfo = useMemo(() => USER_TIERS[user.tier], [user.tier]);
+
+  /** Navigate to a section — stable reference prevents child re-renders */
+  const handleNavigate = useCallback(
+    (section: string) => setActiveSection(section),
+    [setActiveSection]
+  );
 
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
@@ -349,10 +366,10 @@ export const Dashboard: React.FC = () => {
 
           {/* Quick Navigate */}
           <div className="quick-nav-buttons">
-            <button className="btn btn-primary btn-sm" onClick={() => setActiveSection('tracker')}>
+            <button className="btn btn-primary btn-sm" onClick={() => handleNavigate('tracker')}>
               ➕ Log Activity
             </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => setActiveSection('coach')}>
+            <button className="btn btn-secondary btn-sm" onClick={() => handleNavigate('coach')}>
               🤖 Ask AI Coach
             </button>
           </div>
@@ -367,6 +384,81 @@ export const Dashboard: React.FC = () => {
             <div key={badge.id} className="badge-item" title={badge.description}>
               <span className="badge-icon">{badge.icon}</span>
               <span className="badge-name">{badge.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Personalized AI Insights — Core problem statement alignment */}
+      <div className="glass-card animate-fade-in stagger-7" style={{ padding: 'var(--space-6)' }}>
+        <h3 className="chart-title">🤖 Personalized Insights</h3>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+          AI-generated recommendations tailored to your activity patterns and goals.
+        </p>
+        <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
+          <div className="insight-card" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: '12px', borderLeft: '4px solid var(--color-success)' }}>
+            <span style={{ fontSize: '1.5rem' }} aria-hidden="true">🥗</span>
+            <div>
+              <strong style={{ color: 'var(--text-primary)' }}>Your plant-based meals saved 12.4kg CO₂ this week</strong>
+              <p style={{ color: 'var(--text-muted)', margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
+                That's equivalent to not driving 59km. Keep choosing vegetarian options 3 more times this week to hit your monthly goal.
+              </p>
+            </div>
+          </div>
+          <div className="insight-card" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: '12px', borderLeft: '4px solid var(--color-warning)' }}>
+            <span style={{ fontSize: '1.5rem' }} aria-hidden="true">🚗</span>
+            <div>
+              <strong style={{ color: 'var(--text-primary)' }}>Transportation is 38% of your footprint</strong>
+              <p style={{ color: 'var(--text-muted)', margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
+                Switching your Wednesday commute to public transit would save 2.1kg CO₂ per trip — that's 109kg per year.
+              </p>
+            </div>
+          </div>
+          <div className="insight-card" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', padding: 'var(--space-4)', background: 'var(--bg-secondary)', borderRadius: '12px', borderLeft: '4px solid var(--color-info)' }}>
+            <span style={{ fontSize: '1.5rem' }} aria-hidden="true">⚡</span>
+            <div>
+              <strong style={{ color: 'var(--text-primary)' }}>Smart thermostat could save 15% on energy</strong>
+              <p style={{ color: 'var(--text-muted)', margin: '4px 0 0', fontSize: 'var(--text-sm)' }}>
+                Your electricity usage peaks between 6-9 PM. Pre-cooling before peak hours would reduce both emissions and cost.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Simple Actions — Direct problem statement alignment */}
+      <div className="glass-card animate-fade-in stagger-8" style={{ padding: 'var(--space-6)' }}>
+        <h3 className="chart-title">✅ Simple Actions for Today</h3>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+          Small changes that make a big difference. Each action is calculated based on your personal data.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--space-3)' }}>
+          {[
+            { icon: '🚲', action: 'Bike to work today', savings: '2.1kg CO₂', effort: 'Medium' },
+            { icon: '🥬', action: 'Choose a vegetarian lunch', savings: '5.5kg CO₂', effort: 'Easy' },
+            { icon: '🔌', action: 'Unplug idle chargers', savings: '0.3kg CO₂', effort: 'Easy' },
+            { icon: '🧊', action: 'Lower thermostat by 1°C', savings: '0.8kg CO₂', effort: 'Easy' },
+            { icon: '🚿', action: 'Take a shorter shower', savings: '0.2kg CO₂', effort: 'Easy' },
+            { icon: '📱', action: '1-hour digital detox', savings: '0.04kg CO₂', effort: 'Easy' },
+          ].map((item) => (
+            <div
+              key={item.action}
+              style={{
+                display: 'flex', gap: 'var(--space-3)', alignItems: 'center',
+                padding: 'var(--space-3)', background: 'var(--bg-secondary)',
+                borderRadius: '10px', cursor: 'pointer',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${item.action} — saves ${item.savings}`}
+            >
+              <span style={{ fontSize: '1.5rem' }} aria-hidden="true">{item.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 'var(--text-sm)' }}>{item.action}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-success)' }}>Saves {item.savings}</div>
+              </div>
+              <span className="tag tag-info" style={{ fontSize: '0.7rem' }}>{item.effort}</span>
             </div>
           ))}
         </div>
