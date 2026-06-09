@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../app/store';
 import { ACTIVITY_CATEGORIES } from '../../shared/constants';
-import type { Challenge, ChallengeStatus } from '../../shared/types';
+
 import './Challenges.css';
 
 type FilterTab = 'all' | 'available' | 'active' | 'completed';

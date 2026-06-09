@@ -11,9 +11,9 @@ import {
 } from 'recharts';
 import { useAppStore } from '../../app/store';
 import { ACTIVITY_CATEGORIES, CHART_COLORS, GLOBAL_AVERAGES, USER_TIERS } from '../../shared/constants';
-import { formatCarbonAmount, roundToDecimals, kgToTrees } from '../../shared/utils';
-import type { ActivityCategory, DailyFootprint } from '../../shared/types';
-import { format, parseISO, subDays } from 'date-fns';
+import { formatCarbonAmount, roundToDecimals } from '../../shared/utils';
+import type { ActivityCategory } from '../../shared/types';
+import { format, parseISO } from 'date-fns';
 import './Dashboard.css';
 
 /* ─── Sub-Components ─── */
@@ -21,12 +21,7 @@ import './Dashboard.css';
 const SustainabilityScoreRing: React.FC<{ score: number }> = ({ score }) => {
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (score / 100) * circumference;
-  const getColor = (s: number) => {
-    if (s >= 80) return '#10b981';
-    if (s >= 60) return '#22d3ee';
-    if (s >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
+
 
   return (
     <div className="score-ring-container" role="img" aria-label={`Sustainability score: ${score} out of 100`}>
@@ -274,7 +269,7 @@ export const Dashboard: React.FC = () => {
                   stroke="none"
                   paddingAngle={2}
                 >
-                  {metrics.categoryBreakdown.map((entry, i) => (
+                  {metrics.categoryBreakdown.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>

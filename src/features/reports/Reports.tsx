@@ -5,12 +5,12 @@
 
 import React, { useState } from 'react';
 import { useAppStore } from '../../app/store';
-import { formatCarbonAmount, formatDate } from '../../shared/utils';
+import { formatCarbonAmount } from '../../shared/utils';
 import type { SustainabilityReport } from '../../shared/types';
 import './Reports.css';
 
 export const Reports: React.FC = () => {
-  const { reports, user } = useAppStore();
+  const { reports } = useAppStore();
   const [selectedReport, setSelectedReport] = useState<SustainabilityReport | null>(null);
   const [generating, setGenerating] = useState(false);
 

@@ -11,7 +11,7 @@ import {
 import { useAppStore } from '../../app/store';
 import { generateDemoForecast, formatCarbonAmount, roundToDecimals } from '../../shared/utils';
 import { GLOBAL_AVERAGES } from '../../shared/constants';
-import type { ForecastPoint } from '../../shared/types';
+
 import { format, parseISO } from 'date-fns';
 import './Forecast.css';
 

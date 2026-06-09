@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { format, subDays } from 'date-fns';
+
 import type {
   User,
   CarbonActivity,
@@ -14,15 +14,15 @@ import type {
   CoachMessage,
   CommunityGroup,
   LeaderboardEntry,
-  SustainabilityGoal,
+
   SustainabilityReport,
-  ActivityCategory,
+
 } from '../shared/types';
 import {
   generateDemoFootprintData,
   generateId,
   roundToDecimals,
-  calculateSustainabilityScore,
+
 } from '../shared/utils';
 
 /* ─── Demo Data Generators ─── */

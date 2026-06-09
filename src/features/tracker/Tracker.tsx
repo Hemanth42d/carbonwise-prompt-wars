@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  AreaChart, Area, BarChart, Bar,
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { useAppStore } from '../../app/store';

@@ -9,8 +9,8 @@ import {
   Legend,
 } from 'recharts';
 import { useAppStore } from '../../app/store';
-import { generateSimulationResult, formatCarbonAmount, kgToTrees, roundToDecimals } from '../../shared/utils';
-import type { SimulationScenario, SimulationResult } from '../../shared/types';
+import { generateSimulationResult, formatCarbonAmount, roundToDecimals } from '../../shared/utils';
+import type { SimulationScenario } from '../../shared/types';
 import './Simulator.css';
 
 const SCENARIOS: SimulationScenario[] = [
