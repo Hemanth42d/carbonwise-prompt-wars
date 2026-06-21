@@ -17,7 +17,7 @@
  * - Participant count provides social proof for motivation
  */
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useAppStore } from '../../app/store';
 import { ACTIVITY_CATEGORIES } from '../../shared/constants';
 
@@ -25,7 +25,11 @@ import './Challenges.css';
 
 type FilterTab = 'all' | 'available' | 'active' | 'completed';
 
-export const Challenges: React.FC = () => {
+/**
+ * Smart Sustainability Challenges component.
+ * @returns {React.ReactElement} The Challenges UI component.
+ */
+export const Challenges: React.FC = memo(() => {
   const { challenges, joinChallenge } = useAppStore();
   const [filter, setFilter] = useState<FilterTab>('all');
 
@@ -163,4 +167,5 @@ export const Challenges: React.FC = () => {
       )}
     </section>
   );
-};
+});
+Challenges.displayName = 'Challenges';

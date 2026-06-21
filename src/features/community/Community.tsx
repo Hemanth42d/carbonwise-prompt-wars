@@ -14,7 +14,7 @@
  * - Carbon saved metric provides tangible equivalence for abstract scores
  */
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useAppStore } from '../../app/store';
 import { USER_TIERS } from '../../shared/constants';
 import { formatCarbonAmount } from '../../shared/utils';
@@ -22,7 +22,11 @@ import './Community.css';
 
 type CommunityTab = 'leaderboard' | 'groups';
 
-export const Community: React.FC = () => {
+/**
+ * Community and social features component.
+ * @returns {React.ReactElement} The Community UI component.
+ */
+export const Community: React.FC = memo(() => {
   const { communityGroups, leaderboard, joinGroup, user } = useAppStore();
   const [tab, setTab] = useState<CommunityTab>('leaderboard');
 
@@ -127,4 +131,5 @@ export const Community: React.FC = () => {
       )}
     </section>
   );
-};
+});
+Community.displayName = 'Community';

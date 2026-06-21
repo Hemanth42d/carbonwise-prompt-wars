@@ -3,11 +3,15 @@
  * feature showcase, and demo login functionality.
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useAppStore } from '../../app/store';
 import './Login.css';
 
-export const Login: React.FC = () => {
+/**
+ * Login component for authentication and entry to the platform.
+ * @returns {React.ReactElement} The Login UI component.
+ */
+export const Login: React.FC = memo(() => {
   const { login, isLoading } = useAppStore();
 
   return (
@@ -102,4 +106,5 @@ export const Login: React.FC = () => {
       </div>
     </main>
   );
-};
+});
+Login.displayName = 'Login';

@@ -112,7 +112,11 @@ CustomTooltip.displayName = 'CustomTooltip';
 
 /* ─── Main Dashboard Component ─── */
 
-export const Dashboard: React.FC = () => {
+/**
+ * Main Dashboard component displaying sustainability metrics, trends, and quick actions.
+ * @returns {React.ReactElement} The Dashboard UI component.
+ */
+export const Dashboard: React.FC = memo(() => {
   const { user, footprintData, challenges, setActiveSection } = useAppStore();
 
   /* Computed metrics */
@@ -473,4 +477,5 @@ export const Dashboard: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+Dashboard.displayName = 'Dashboard';

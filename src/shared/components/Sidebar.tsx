@@ -14,15 +14,35 @@ interface NavItem {
   icon: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'tracker', label: 'Carbon Tracker', icon: '🌍' },
-  { id: 'forecast', label: 'Forecast', icon: '📈' },
-  { id: 'simulator', label: 'Impact Simulator', icon: '🔬' },
-  { id: 'challenges', label: 'Challenges', icon: '🏆' },
-  { id: 'community', label: 'Community', icon: '👥' },
-  { id: 'coach', label: 'AI Coach', icon: '🤖' },
-  { id: 'reports', label: 'Reports', icon: '📄' },
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: 'Understand',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+      { id: 'forecast', label: 'Forecast', icon: '📈' },
+      { id: 'reports', label: 'Reports', icon: '📄' },
+    ],
+  },
+  {
+    title: 'Track',
+    items: [
+      { id: 'tracker', label: 'Carbon Tracker', icon: '🌍' },
+    ],
+  },
+  {
+    title: 'Reduce',
+    items: [
+      { id: 'coach', label: 'AI Coach', icon: '🤖' },
+      { id: 'simulator', label: 'Impact Simulator', icon: '🔬' },
+      { id: 'challenges', label: 'Challenges', icon: '🏆' },
+      { id: 'community', label: 'Community', icon: '👥' },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -52,23 +72,33 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation Items */}
-      <ul className="sidebar-nav" role="menubar">
-        {NAV_ITEMS.map((item) => (
-          <li key={item.id} role="none">
-            <button
-              role="menuitem"
-              className={`sidebar-nav-item ${activeSection === item.id ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.id)}
-              aria-current={activeSection === item.id ? 'page' : undefined}
-              title={item.label}
-            >
-              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-              {!sidebarCollapsed && <span className="nav-label">{item.label}</span>}
-              {activeSection === item.id && <span className="nav-indicator" aria-hidden="true" />}
-            </button>
-          </li>
+      <div className="sidebar-nav-container">
+        {NAV_SECTIONS.map((section, idx) => (
+          <div key={section.title} className="sidebar-section">
+            {idx > 0 && sidebarCollapsed && <hr className="sidebar-divider" />}
+            {!sidebarCollapsed && (
+              <div className="sidebar-section-header">{section.title}</div>
+            )}
+            <ul className="sidebar-nav" role="menubar">
+              {section.items.map((item) => (
+                <li key={item.id} role="none">
+                  <button
+                    role="menuitem"
+                    className={`sidebar-nav-item ${activeSection === item.id ? 'active' : ''}`}
+                    onClick={() => setActiveSection(item.id)}
+                    aria-current={activeSection === item.id ? 'page' : undefined}
+                    title={item.label}
+                  >
+                    <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+                    {!sidebarCollapsed && <span className="nav-label">{item.label}</span>}
+                    {activeSection === item.id && <span className="nav-indicator" aria-hidden="true" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {/* User Profile */}
       {user && !sidebarCollapsed && (

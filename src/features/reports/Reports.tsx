@@ -17,13 +17,17 @@
  * - Recommendations prioritized by potential impact (highest-emission category first)
  */
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useAppStore } from '../../app/store';
 import { formatCarbonAmount } from '../../shared/utils';
 import type { SustainabilityReport } from '../../shared/types';
 import './Reports.css';
 
-export const Reports: React.FC = () => {
+/**
+ * AI Sustainability Reports component.
+ * @returns {React.ReactElement} The Reports UI component.
+ */
+export const Reports: React.FC = memo(() => {
   const { reports } = useAppStore();
   const [selectedReport, setSelectedReport] = useState<SustainabilityReport | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -192,4 +196,5 @@ export const Reports: React.FC = () => {
       )}
     </section>
   );
-};
+});
+Reports.displayName = 'Reports';

@@ -18,7 +18,7 @@
  * - Period selector allows understanding patterns at different time granularities
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -79,7 +79,11 @@ const SUBCATEGORIES: Record<ActivityCategory, { label: string; unit: string; fac
   ],
 };
 
-export const Tracker: React.FC = () => {
+/**
+ * Carbon Tracker component for logging emissions across categories.
+ * @returns {React.ReactElement} The Carbon Tracker UI component.
+ */
+export const Tracker: React.FC = memo(() => {
   const { footprintData, addActivity } = useAppStore();
   const [period, setPeriod] = useState<TimePeriod>('daily');
   const [showForm, setShowForm] = useState(false);
@@ -389,4 +393,5 @@ export const Tracker: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+Tracker.displayName = 'Tracker';

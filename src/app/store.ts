@@ -30,6 +30,7 @@ import {
   generateDemoFootprintData,
   generateId,
   roundToDecimals,
+  calculateSustainabilityScore,
 } from '../shared/utils';
 import { createRateLimiter, sanitizeInput } from '../shared/utils/security';
 
@@ -270,9 +271,95 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: generateId(),
       userId: get().user?.id ?? 'demo',
     };
-    set((state) => ({
-      activities: [newActivity, ...state.activities],
-    }));
+    
+    set((state) => {
+      const dateStr = newActivity.date.split('T')[0] || new Date().toISOString().split('T')[0]!;
+      
+      // Update or insert footprintData
+      const updatedFootprintData = [...state.footprintData];
+      const existingIndex = updatedFootprintData.findIndex((d) => d.date === dateStr);
+
+      if (existingIndex !== -1) {
+        const existing = updatedFootprintData[existingIndex]!;
+        const updatedBreakdown = { ...existing.breakdown };
+        updatedBreakdown[newActivity.category] = roundToDecimals(
+          (updatedBreakdown[newActivity.category] ?? 0) + newActivity.carbonKg,
+          2
+        );
+        
+        updatedFootprintData[existingIndex] = {
+          ...existing,
+          totalKg: roundToDecimals(existing.totalKg + newActivity.carbonKg, 2),
+          breakdown: updatedBreakdown,
+        };
+      } else {
+        const newDailyFootprint: DailyFootprint = {
+          date: dateStr,
+          totalKg: newActivity.carbonKg,
+          breakdown: {
+            transportation: 0,
+            flights: 0,
+            electricity: 0,
+            food: 0,
+            shopping: 0,
+            water: 0,
+            digital: 0,
+            [newActivity.category]: newActivity.carbonKg,
+          },
+        };
+        updatedFootprintData.push(newDailyFootprint);
+        // Sort chronologically by date
+        updatedFootprintData.sort((a, b) => a.date.localeCompare(b.date));
+      }
+
+      // Re-calculate user sustainability score dynamically
+      let updatedUser = state.user;
+      if (updatedUser) {
+        const last30 = updatedFootprintData.slice(-30);
+        const monthlyTotalKg = last30.reduce((s, d) => s + d.totalKg, 0);
+        const dailyAvgKg = monthlyTotalKg / Math.max(1, last30.length);
+
+        const last7 = updatedFootprintData.slice(-7);
+        const prev7 = updatedFootprintData.slice(-14, -7);
+        const weeklyTotalKg = last7.reduce((s, d) => s + d.totalKg, 0);
+        const prevWeekTotalKg = prev7.reduce((s, d) => s + d.totalKg, 0);
+        
+        // Improvement is reduction (positive value is improvement)
+        const wowChange = prevWeekTotalKg > 0
+          ? ((prevWeekTotalKg - weeklyTotalKg) / prevWeekTotalKg) * 100
+          : 0;
+
+        const goalsCompleted = updatedUser.goals.filter((g) => g.status === 'completed').length;
+        const goalsTotal = updatedUser.goals.length;
+
+        const newScore = calculateSustainabilityScore({
+          dailyAvgKg,
+          consistencyDays: updatedUser.streakDays,
+          improvementPercent: wowChange,
+          goalsCompleted,
+          goalsTotal,
+        });
+
+        // Determine tier based on new score
+        let tier: User['tier'] = 'seedling';
+        if (newScore >= 90) tier = 'forest';
+        else if (newScore >= 70) tier = 'tree';
+        else if (newScore >= 40) tier = 'sapling';
+        else if (newScore >= 20) tier = 'sprout';
+
+        updatedUser = {
+          ...updatedUser,
+          sustainabilityScore: newScore,
+          tier,
+        };
+      }
+
+      return {
+        activities: [newActivity, ...state.activities],
+        footprintData: updatedFootprintData,
+        user: updatedUser,
+      };
+    });
   },
 
   /* Challenges */

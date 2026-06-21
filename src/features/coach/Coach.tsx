@@ -19,7 +19,7 @@
  * - XSS prevention via safeMarkdownToHtml() — escape first, then format
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useAppStore } from '../../app/store';
 import { getCoachResponse } from '../../services/aiCoach';
 import { safeMarkdownToHtml } from '../../shared/utils/security';
@@ -27,7 +27,11 @@ import { sanitizeInput } from '../../shared/utils/security';
 import { format, parseISO } from 'date-fns';
 import './Coach.css';
 
-export const Coach: React.FC = () => {
+/**
+ * AI Coach conversational coaching component.
+ * @returns {React.ReactElement} The AI Coach UI component.
+ */
+export const Coach: React.FC = memo(() => {
   const { chatMessages, addChatMessage, isChatLoading, setChatLoading, user, footprintData } = useAppStore();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -183,6 +187,7 @@ export const Coach: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+Coach.displayName = 'Coach';
 
 /* Markdown rendering is now handled by safeMarkdownToHtml from security utils */

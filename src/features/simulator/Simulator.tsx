@@ -20,7 +20,7 @@
  * - Tree equivalents calculated at 22 kg CO₂/tree/year (EPA standard)
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Legend,
@@ -65,7 +65,11 @@ const SCENARIOS: SimulationScenario[] = [
   },
 ];
 
-export const Simulator: React.FC = () => {
+/**
+ * Impact Simulator component for visualizing hypothetical carbon reductions.
+ * @returns {React.ReactElement} The Simulator UI component.
+ */
+export const Simulator: React.FC = memo(() => {
   const { footprintData } = useAppStore();
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [activeScenarios, setActiveScenarios] = useState<Set<string>>(new Set());
@@ -244,4 +248,5 @@ export const Simulator: React.FC = () => {
       )}
     </section>
   );
-};
+});
+Simulator.displayName = 'Simulator';

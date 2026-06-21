@@ -17,7 +17,7 @@
  * - Paris target (2,300 kg/year = 6.3 kg/day) shown as reference line
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine,
@@ -43,7 +43,11 @@ const PERIOD_LABELS: Record<ForecastPeriod, string> = {
   '1y': '1-Year Forecast',
 };
 
-export const Forecast: React.FC = () => {
+/**
+ * Carbon Forecast component.
+ * @returns {React.ReactElement} The Forecast UI component.
+ */
+export const Forecast: React.FC = memo(() => {
   const { footprintData } = useAppStore();
   const [period, setPeriod] = useState<ForecastPeriod>('30d');
 
@@ -237,4 +241,5 @@ export const Forecast: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+Forecast.displayName = 'Forecast';
