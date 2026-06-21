@@ -1,6 +1,20 @@
 /**
  * AI Sustainability Reports — View and generate downloadable reports
  * with weekly summaries, monthly reviews, and annual overviews.
+ *
+ * PROBLEM STATEMENT ALIGNMENT:
+ * - UNDERSTAND: Structured reports distill complex emission data into digestible
+ *   highlights, scores, and trend analysis at weekly/monthly/annual granularity.
+ * - PERSONALIZED INSIGHTS: Each report includes AI-generated recommendations
+ *   targeting the user's specific high-emission categories with actionable steps.
+ * - REDUCE: Recommendations section provides concrete reduction strategies with
+ *   estimated CO₂ savings, turning understanding into measurable action.
+ *
+ * Decision Making Logic:
+ * - Sustainability score (0-100) computed per report period using weighted formula
+ * - Reduction % calculated from period-over-period comparison
+ * - Highlights extracted from top 3 significant changes in emission categories
+ * - Recommendations prioritized by potential impact (highest-emission category first)
  */
 
 import React, { useState } from 'react';

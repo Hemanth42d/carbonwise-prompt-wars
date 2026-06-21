@@ -341,8 +341,8 @@ describe('generateDemoFootprintData', () => {
   it('should generate dates in chronological order', () => {
     const data = generateDemoFootprintData(10);
     for (let i = 1; i < data.length; i++) {
-      expect(new Date(data[i].date).getTime()).toBeGreaterThan(
-        new Date(data[i - 1].date).getTime()
+      expect(new Date(data[i]!.date).getTime()).toBeGreaterThan(
+        new Date(data[i - 1]!.date).getTime()
       );
     }
   });
@@ -381,8 +381,8 @@ describe('generateDemoForecast', () => {
   it('should have decreasing confidence over time', () => {
     const historical = generateDemoFootprintData(30);
     const forecast = generateDemoForecast(historical, 30);
-    expect(forecast[0].confidence).toBeGreaterThan(
-      forecast[forecast.length - 1].confidence
+    expect(forecast[0]!.confidence).toBeGreaterThan(
+      forecast[forecast.length - 1]!.confidence
     );
   });
 });

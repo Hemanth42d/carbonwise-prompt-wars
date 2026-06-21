@@ -165,7 +165,7 @@ describe('generateDemoFootprintData', () => {
   it('dates are chronological', () => {
     const data = generateDemoFootprintData(10);
     for (let i = 1; i < data.length; i++) {
-      expect(new Date(data[i].date).getTime()).toBeGreaterThan(new Date(data[i - 1].date).getTime());
+      expect(new Date(data[i]!.date).getTime()).toBeGreaterThan(new Date(data[i - 1]!.date).getTime());
     }
   });
   it('has all 7 required categories in breakdown', () => {
@@ -191,7 +191,7 @@ describe('generateDemoForecast', () => {
   });
   it('confidence decreases over time', () => {
     const pts = generateDemoForecast(hist, 30);
-    expect(pts[0].confidence).toBeGreaterThan(pts[pts.length - 1].confidence);
+    expect(pts[0]!.confidence).toBeGreaterThan(pts[pts.length - 1]!.confidence);
   });
   it('confidence stays 0-1', () =>
     generateDemoForecast(hist, 30).forEach((p) => {

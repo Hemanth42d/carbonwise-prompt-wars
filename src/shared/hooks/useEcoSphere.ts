@@ -7,7 +7,7 @@
  * - usePreviousValue: Powers trend analysis — compares current vs previous for insights
  */
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../../app/store';
 import { roundToDecimals } from '../utils';
 import { GLOBAL_AVERAGES } from '../constants';
@@ -40,18 +40,19 @@ export function useDebounce<T>(value: T, delayMs = 300): T {
 /**
  * Returns the previous value of a variable.
  * Used for trend calculations — compare current footprint to previous period.
+ * Uses state-only approach to comply with React 19 ref-during-render rules.
  *
  * @param value - The current value
  * @returns The value from the previous render
  */
 export function usePreviousValue<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
+  const [tuple, setTuple] = useState<[T | undefined, T]>([undefined, value]);
 
-  useEffect(() => {
-    ref.current = value;
-  });
+  if (tuple[1] !== value) {
+    setTuple([tuple[1], value]);
+  }
 
-  return ref.current;
+  return tuple[0];
 }
 
 /* ─── useFootprintSummary ─── */

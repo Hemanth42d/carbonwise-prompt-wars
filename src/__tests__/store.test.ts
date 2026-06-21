@@ -69,8 +69,10 @@ describe('AppStore', () => {
       });
       const s = useAppStore.getState();
       expect(s.activities).toHaveLength(1);
-      expect(s.activities[0].carbonKg).toBe(4.2);
-      expect(s.activities[0].id).toBeTruthy();
+      const activity = s.activities[0];
+      expect(activity).toBeDefined();
+      expect(activity!.carbonKg).toBe(4.2);
+      expect(activity!.id).toBeTruthy();
     });
   });
 
@@ -101,7 +103,7 @@ describe('AppStore', () => {
       useAppStore.getState().addChatMessage('Hello', 'user');
       const s = useAppStore.getState();
       expect(s.chatMessages).toHaveLength(1);
-      expect(s.chatMessages[0].role).toBe('user');
+      expect(s.chatMessages[0]!.role).toBe('user');
     });
 
     it('should toggle loading', () => {

@@ -71,7 +71,7 @@ export function createRateLimiter(maxAttempts: number, windowMs: number) {
     tryAction(): boolean {
       const now = Date.now();
       // Remove expired attempts
-      while (attempts.length > 0 && attempts[0] < now - windowMs) {
+      while (attempts.length > 0 && (attempts[0] ?? now) < now - windowMs) {
         attempts.shift();
       }
       if (attempts.length >= maxAttempts) {

@@ -1,10 +1,11 @@
 /**
- * Tests for AI Coach service — keyword matching and response quality.
+ * Integration tests for AI Coach service — validates intent routing,
+ * context-aware responses, and response format consistency.
  */
 import { describe, it, expect } from 'vitest';
 import { getCoachResponse, generateChallengeDescription, generateReportSummary } from '../services/aiCoach';
 
-describe('getCoachResponse', () => {
+describe('getCoachResponse — integration', () => {
   it('should return reduction plan for "reduce" keyword', async () => {
     const res = await getCoachResponse('How can I reduce my footprint?');
     expect(res.content).toContain('Reduction Plan');
@@ -29,17 +30,41 @@ describe('getCoachResponse', () => {
     expect(res.suggestions.length).toBeGreaterThan(0);
   });
 
+  it('should return tips for "suggest" keyword', async () => {
+    const res = await getCoachResponse('Can you suggest things?');
+    expect(res.content).toContain('Tips');
+    expect(res.suggestions.length).toBeGreaterThan(0);
+  });
+
   it('should return default for unmatched input', async () => {
     const res = await getCoachResponse('hello');
     expect(res.content).toBeTruthy();
     expect(res.suggestions.length).toBeGreaterThan(0);
   });
+
+  it('should handle empty message gracefully', async () => {
+    const res = await getCoachResponse('');
+    expect(res.content).toBeTruthy();
+  });
+
+  it('should always return 3+ suggestions', async () => {
+    const messages = ['reduce', 'compare', 'plan', 'forecast', 'tips', 'hello'];
+    for (const msg of messages) {
+      const res = await getCoachResponse(msg);
+      expect(res.suggestions.length).toBeGreaterThanOrEqual(3);
+    }
+  }, 15000);
 });
 
 describe('generateChallengeDescription', () => {
   it('should return transportation description', () => {
     const desc = generateChallengeDescription('transportation');
     expect(desc).toContain('transportation');
+  });
+
+  it('should return food description', () => {
+    const desc = generateChallengeDescription('food');
+    expect(desc).toContain('dietary');
   });
 
   it('should return default for unknown category', () => {

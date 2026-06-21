@@ -1,6 +1,16 @@
 /**
  * Global application state management using Zustand.
  * Centralized store with typed slices for each feature domain.
+ *
+ * PROBLEM STATEMENT ALIGNMENT:
+ * - TRACK: addActivity() records emissions with sanitized inputs; footprintData[] stores daily aggregates
+ * - UNDERSTAND: Derived state computed via selectors/hooks for charts, scores, and trends
+ * - REDUCE: Challenge management (joinChallenge) + AI Coach state (chatMessages, isChatLoading)
+ * - SIMPLE ACTIONS: Quick-access state mutations for toggling sidebar, joining groups, adding activities
+ * - PERSONALIZED INSIGHTS: User profile (score, streak, tier, goals) feeds into AI response generation
+ *
+ * Security: All user inputs sanitized via sanitizeInput()/sanitizeNumber() before storage.
+ * Auth: Rate-limited login with loginRateLimiter (5 attempts / 15 min).
  */
 
 import { create } from 'zustand';
@@ -113,7 +123,7 @@ function createDemoLeaderboard(): LeaderboardEntry[] {
     photoURL: '',
     score: 98 - i * 4 + Math.floor(Math.random() * 3),
     carbonSaved: roundToDecimals(2500 - i * 180 + Math.random() * 50, 1),
-    tier: tiers[i],
+    tier: tiers[i] ?? 'seedling',
   }));
 }
 

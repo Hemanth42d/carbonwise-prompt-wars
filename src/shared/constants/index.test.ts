@@ -79,7 +79,7 @@ describe('USER_TIERS', () => {
   it('minScores are non-decreasing', () => {
     const scores = Object.values(USER_TIERS).map((t) => t.minScore);
     for (let i = 1; i < scores.length; i++) {
-      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1]);
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1] ?? 0);
     }
   });
   it('seedling starts at 0', () => expect(USER_TIERS.seedling.minScore).toBe(0));

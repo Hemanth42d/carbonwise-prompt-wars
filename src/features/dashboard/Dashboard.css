@@ -296,3 +296,121 @@
     flex-direction: column;
   }
 }
+
+/* ─── Insight Cards Section ─── */
+
+.insights-section {
+  padding: var(--space-6);
+}
+
+.insights-subtitle {
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.insights-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.insight-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  background: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.insight-card--success {
+  border-left: 4px solid var(--color-success);
+}
+
+.insight-card--warning {
+  border-left: 4px solid var(--color-warning);
+}
+
+.insight-card--info {
+  border-left: 4px solid var(--color-info);
+}
+
+.insight-card-icon {
+  font-size: 1.5rem;
+}
+
+.insight-card-title {
+  color: var(--text-primary);
+}
+
+.insight-card-desc {
+  color: var(--text-muted);
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+}
+
+/* ─── Simple Actions Section ─── */
+
+.actions-section {
+  padding: var(--space-6);
+}
+
+.actions-subtitle {
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-3);
+}
+
+.action-item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+
+.action-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-item:focus-visible {
+  outline: 2px solid var(--google-blue);
+  outline-offset: 2px;
+}
+
+.action-item-icon {
+  font-size: 1.5rem;
+}
+
+.action-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.action-item-savings {
+  font-size: 0.75rem;
+  color: var(--color-success);
+}
+
+.action-item-effort {
+  font-size: 0.7rem;
+}

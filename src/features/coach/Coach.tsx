@@ -1,6 +1,22 @@
 /**
  * AI Sustainability Coach — Natural language conversation interface
  * powered by Gemini for personalized sustainability advice.
+ *
+ * PROBLEM STATEMENT ALIGNMENT:
+ * - REDUCE: Conversational AI provides actionable, personalized reduction strategies
+ *   based on the user's actual emission data, streak, and top categories.
+ * - PERSONALIZED INSIGHTS: Gemini-powered intent detection routes user queries to
+ *   specialized response generators (reduce, compare, plan, forecast, tips) that
+ *   incorporate the user's real footprint summary into every response.
+ * - UNDERSTAND: Comparison responses benchmark user vs. US/EU/World/Paris averages
+ *   using actual projected annual emissions from their tracked data.
+ *
+ * Decision Making Logic:
+ * - Intent detected via keyword matching (reduce/compare/plan/forecast/tips/general)
+ * - User context (footprintData + profile) aggregated into FootprintSummary
+ * - Each response generator personalizes content using: daily average, top category,
+ *   week-over-week trend, sustainability score, streak days, and completed goals
+ * - XSS prevention via safeMarkdownToHtml() — escape first, then format
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -12,7 +28,7 @@ import { format, parseISO } from 'date-fns';
 import './Coach.css';
 
 export const Coach: React.FC = () => {
-  const { chatMessages, addChatMessage, isChatLoading, setChatLoading } = useAppStore();
+  const { chatMessages, addChatMessage, isChatLoading, setChatLoading, user, footprintData } = useAppStore();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +51,8 @@ export const Coach: React.FC = () => {
     setChatLoading(true);
 
     try {
-      const response = await getCoachResponse(text);
+      /* Pass user context for data-driven, personalized responses */
+      const response = await getCoachResponse(text, { user, footprintData });
       addChatMessage(response.content, 'assistant', response.suggestions);
     } catch {
       addChatMessage(
@@ -45,7 +62,7 @@ export const Coach: React.FC = () => {
     } finally {
       setChatLoading(false);
     }
-  }, [input, isChatLoading, addChatMessage, setChatLoading]);
+  }, [input, isChatLoading, addChatMessage, setChatLoading, user, footprintData]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

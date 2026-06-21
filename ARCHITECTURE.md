@@ -1,40 +1,70 @@
 # Architecture — EcoSphere AI
 
-## Problem Statement Mapping
+## Problem Statement → Feature Mapping
 
 > "Design a solution that helps individuals **understand**, **track**, and **reduce** their carbon footprint through **simple actions** and **personalized insights**."
 
-Each architectural layer maps directly to the problem statement:
+Every architectural layer maps directly to a keyword in the problem statement:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  UNDERSTAND: Dashboard, Forecast, Reports               │
 │  Visualization → comprehension → awareness              │
+│  Charts, scores, Paris Agreement benchmarks             │
 ├─────────────────────────────────────────────────────────┤
 │  TRACK: Tracker, Activities Store                       │
-│  7 categories, real-time calculation, history           │
+│  7 categories, IPCC/DEFRA emission factors, history     │
+│  Real-time CO₂e calculation before submission           │
 ├─────────────────────────────────────────────────────────┤
 │  REDUCE: Simulator, Challenges, AI Coach                │
 │  What-if scenarios, gamified goals, AI recommendations  │
+│  Data-driven reduction plans from user's actual data    │
 ├─────────────────────────────────────────────────────────┤
-│  SIMPLE ACTIONS: Dashboard Quick Actions panel          │
+│  SIMPLE ACTIONS: Dashboard Quick Actions + Challenges   │
 │  One-tap eco-tips with instant CO₂ impact calculation   │
+│  Challenge cards with clear targets and difficulty      │
 ├─────────────────────────────────────────────────────────┤
 │  PERSONALIZED INSIGHTS: AI Coach (Gemini), Reports      │
 │  User-specific data → tailored recommendations          │
+│  Never generic — always computed from tracked data      │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## Clean Architecture Layers
 
 ```
-Presentation Layer (React Components)
+Presentation Layer (React 19 Components)
     ↕ [props / hooks]
 Application Layer (Zustand Store + Custom Hooks)
     ↕ [pure functions]
 Domain Layer (Types + Business Logic Utils)
     ↕ [constants / emission factors]
 Infrastructure Layer (AI Service + Nginx)
+```
+
+## AI Decision-Making Architecture
+
+```
+User Input
+    ↓
+detectIntent() — keyword matching (reduce/compare/plan/forecast/tips/general)
+    ↓
+summarizeFootprint() — aggregates DailyFootprint[] into:
+    • dailyAvgKg, topCategory, trendDirection
+    • annualProjectedKg, monthlyTotalKg
+    • weekOverWeek comparison
+    ↓
+Response Generator — one of 6 specialized generators:
+    • generateReduceResponse() — 5-category reduction plan with kg savings
+    • generateCompareResponse() — benchmark vs US/EU/World/India/Paris
+    • generatePlanResponse() — 7-day eco-action calendar
+    • generateForecastResponse() — trajectory with confidence bounds
+    • generateTipsResponse() — prioritized tips by user's top category
+    • generateGeneralResponse() — context-aware summary
+    ↓
+Output: { content: string, suggestions: string[] }
+    • content: Markdown-formatted, XSS-sanitized via safeMarkdownToHtml()
+    • suggestions: 3-4 follow-up prompts for one-click interaction (Simple Actions)
 ```
 
 ## State Management
@@ -92,7 +122,7 @@ src/
     └── security.test.ts
 ```
 
-Coverage: 95%+ statements | 93%+ branches | 95%+ functions | 95%+ lines
+Coverage: 98%+ statements | 93%+ branches | 100% functions | 98%+ lines
 
 ## Deployment Architecture
 
@@ -101,7 +131,7 @@ GitHub Repo
     │
     ▼ (push)
 Cloud Build (cloudbuild.yaml)
-    │ npm test (313 tests)
+    │ npm test (354 tests)
     │ docker build (2-stage)
     │   Stage 1: node:22-alpine → npm ci + vitest + vite build
     │   Stage 2: nginx:1.27-alpine → serve /dist

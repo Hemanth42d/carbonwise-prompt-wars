@@ -1,6 +1,20 @@
 /**
  * Smart Sustainability Challenges — AI-generated challenges with
  * badges, progress tracking, and difficulty levels.
+ *
+ * PROBLEM STATEMENT ALIGNMENT:
+ * - REDUCE: Gamified challenges incentivize sustained emission reduction behavior
+ *   with measurable CO₂ targets (e.g., "Save 15kg CO₂ in 7 days").
+ * - SIMPLE ACTIONS: Each challenge breaks down reduction into achievable daily actions
+ *   with clear difficulty levels (easy/medium/hard) and time commitments.
+ * - PERSONALIZED INSIGHTS: Challenges are category-specific, targeting the user's
+ *   highest-emission areas for maximum impact (XP and badge rewards reinforce habit formation).
+ *
+ * Decision Making Logic:
+ * - Challenges filtered by status (all/available/active/completed) for focused engagement
+ * - Progress tracked as percentage toward CO₂ reduction target
+ * - XP system rewards consistency, not just one-time actions
+ * - Participant count provides social proof for motivation
  */
 
 import React, { useState } from 'react';

@@ -1,108 +1,278 @@
 /**
- * Co-located tests for the AI Coach service.
- * Tests keyword matching, response quality, and content generation.
+ * Tests for AI Coach Service — context-aware sustainability coaching.
+ * Validates intent detection, data summarization, and response personalization.
  */
 import { describe, it, expect } from 'vitest';
-import { getCoachResponse, generateChallengeDescription, generateReportSummary } from './aiCoach';
+import {
+  getCoachResponse,
+  detectIntent,
+  summarizeFootprint,
+  generateChallengeDescription,
+  generateReportSummary,
+} from './aiCoach';
+import type { UserContext } from './aiCoach';
+import type { DailyFootprint, ActivityCategory, User } from '../shared/types';
 
-describe('getCoachResponse — keyword matching', () => {
-  it('returns reduction plan for "reduce"', async () => {
-    const r = await getCoachResponse('How can I reduce my footprint?');
-    expect(r.content).toContain('Reduction Plan');
-    expect(r.suggestions.length).toBeGreaterThan(0);
+/* ─── Test Helpers ─── */
+
+function createMockUser(overrides?: Partial<User>): User {
+  return {
+    id: 'test-user',
+    email: 'test@eco.ai',
+    displayName: 'Test User',
+    photoURL: '',
+    joinedAt: '2025-09-15',
+    sustainabilityScore: 72,
+    totalCarbonSaved: 1200,
+    streakDays: 15,
+    badges: [],
+    goals: [
+      { id: 'g1', title: 'Reduce 20%', description: '', targetKg: 100, currentKg: 50, deadline: '2026-12-01', status: 'active', category: 'overall' },
+      { id: 'g2', title: 'Vegan month', description: '', targetKg: 50, currentKg: 50, deadline: '2026-05-01', status: 'completed', category: 'food' },
+    ],
+    tier: 'sapling',
+    ...overrides,
+  };
+}
+
+function createMockFootprint(days: number): DailyFootprint[] {
+  const data: DailyFootprint[] = [];
+  for (let i = 0; i < days; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - (days - 1 - i));
+    const totalKg = 8 + Math.sin(i / 7) * 2;
+    const breakdown: Record<ActivityCategory, number> = {
+      transportation: totalKg * 0.35,
+      flights: 0,
+      electricity: totalKg * 0.2,
+      food: totalKg * 0.3,
+      shopping: totalKg * 0.05,
+      water: totalKg * 0.03,
+      digital: totalKg * 0.07,
+    };
+    data.push({
+      date: date.toISOString().slice(0, 10),
+      totalKg,
+      breakdown,
+    });
+  }
+  return data;
+}
+
+function createMockContext(): UserContext {
+  return {
+    user: createMockUser(),
+    footprintData: createMockFootprint(90),
+  };
+}
+
+/* ─── Intent Detection Tests ─── */
+
+describe('detectIntent', () => {
+  it('detects "reduce" intent', () => {
+    expect(detectIntent('How can I reduce my footprint?')).toBe('reduce');
   });
-  it('returns reduction plan for "cut"', async () => {
-    const r = await getCoachResponse('I want to cut my emissions');
-    expect(r.content).toContain('Reduction Plan');
+
+  it('detects "reduce" from synonym "cut"', () => {
+    expect(detectIntent('help me cut emissions')).toBe('reduce');
   });
-  it('returns reduction plan for "lower"', async () => {
-    const r = await getCoachResponse('how do I lower carbon?');
-    expect(r.content).toContain('Reduction Plan');
+
+  it('detects "reduce" from synonym "lower"', () => {
+    expect(detectIntent('I want to lower my carbon')).toBe('reduce');
   });
-  it('returns comparison for "compare"', async () => {
-    const r = await getCoachResponse('How do I compare to others?');
-    expect(r.content).toContain('Compare');
+
+  it('detects "compare" intent', () => {
+    expect(detectIntent('Compare me to global averages')).toBe('compare');
   });
-  it('returns comparison for "average"', async () => {
-    const r = await getCoachResponse('Am I above the average?');
-    expect(r.content).toContain('Compare');
+
+  it('detects "compare" from "benchmark"', () => {
+    expect(detectIntent('Show me benchmarks')).toBe('compare');
   });
-  it('returns comparison for "benchmark"', async () => {
-    const r = await getCoachResponse('What is my benchmark?');
-    expect(r.content).toContain('Compare');
+
+  it('detects "plan" intent', () => {
+    expect(detectIntent('Create a weekly plan')).toBe('plan');
   });
-  it('returns weekly plan for "plan"', async () => {
-    const r = await getCoachResponse('Create a plan for me');
-    expect(r.content).toContain('Plan');
+
+  it('detects "plan" from "schedule"', () => {
+    expect(detectIntent('Help me schedule eco actions')).toBe('plan');
   });
-  it('returns weekly plan for "schedule"', async () => {
-    const r = await getCoachResponse('Give me a schedule');
-    expect(r.content).toContain('Plan');
+
+  it('detects "forecast" intent', () => {
+    expect(detectIntent('What is my carbon forecast?')).toBe('forecast');
   });
-  it('returns forecast for "forecast"', async () => {
-    const r = await getCoachResponse('Show me my forecast');
-    expect(r.content).toContain('Forecast');
+
+  it('detects "forecast" from "predict"', () => {
+    expect(detectIntent('predict my future emissions')).toBe('forecast');
   });
-  it('returns forecast for "predict"', async () => {
-    const r = await getCoachResponse('Can you predict my future emissions?');
-    expect(r.content).toContain('Forecast');
+
+  it('detects "tips" intent', () => {
+    expect(detectIntent('Give me some tips')).toBe('tips');
   });
-  it('returns default for unmatched input', async () => {
-    const r = await getCoachResponse('hello there');
-    expect(r.content).toBeTruthy();
-    expect(r.suggestions.length).toBeGreaterThan(0);
+
+  it('detects "tips" from "suggest"', () => {
+    expect(detectIntent('Can you suggest improvements?')).toBe('tips');
   });
-  it('all responses have non-empty content', async () => {
-    const messages = ['reduce', 'compare', 'plan', 'forecast', 'hello'];
-    for (const m of messages) {
-      const r = await getCoachResponse(m);
-      expect(r.content.length).toBeGreaterThan(10);
-      expect(Array.isArray(r.suggestions)).toBe(true);
-    }
-  }, 10000);
+
+  it('falls back to "general" for unmatched', () => {
+    expect(detectIntent('Hello there!')).toBe('general');
+  });
+
+  it('is case-insensitive', () => {
+    expect(detectIntent('REDUCE MY FOOTPRINT')).toBe('reduce');
+  });
 });
 
+/* ─── Data Summarization Tests ─── */
+
+describe('summarizeFootprint', () => {
+  it('returns defaults for empty data', () => {
+    const summary = summarizeFootprint([]);
+    expect(summary.daysTracked).toBe(0);
+    expect(summary.dailyAvgKg).toBeGreaterThan(0);
+  });
+
+  it('computes correct daily average', () => {
+    const data = createMockFootprint(30);
+    const summary = summarizeFootprint(data);
+    expect(summary.dailyAvgKg).toBeGreaterThan(0);
+    expect(summary.daysTracked).toBe(30);
+  });
+
+  it('identifies the top emission category', () => {
+    const data = createMockFootprint(30);
+    const summary = summarizeFootprint(data);
+    expect(['transportation', 'food', 'electricity']).toContain(summary.topCategory);
+    expect(summary.topCategoryPercent).toBeGreaterThan(0);
+    expect(summary.topCategoryPercent).toBeLessThanOrEqual(100);
+  });
+
+  it('calculates annual projection', () => {
+    const data = createMockFootprint(30);
+    const summary = summarizeFootprint(data);
+    expect(summary.annualProjectedKg).toBeGreaterThan(summary.monthlyTotalKg);
+    expect(summary.annualProjectedKg).toBe(Math.round(summary.monthlyTotalKg * 12));
+  });
+
+  it('detects trend direction', () => {
+    const data = createMockFootprint(30);
+    const summary = summarizeFootprint(data);
+    expect(['improving', 'stable', 'worsening']).toContain(summary.trendDirection);
+  });
+});
+
+/* ─── Context-Aware Response Tests ─── */
+
+describe('getCoachResponse', () => {
+  const ctx = createMockContext();
+
+  it('returns reduction plan for "reduce" keyword', async () => {
+    const response = await getCoachResponse('How can I reduce my footprint?', ctx);
+    expect(response.content).toContain('Reduction Plan');
+    expect(response.content).toContain('kg'); // contains actual data
+    expect(response.suggestions).toHaveLength(4);
+  });
+
+  it('returns personalized comparison for "compare"', async () => {
+    const response = await getCoachResponse('Compare me to others', ctx);
+    expect(response.content).toContain('How You Compare');
+    expect(response.content).toContain('US Average');
+    expect(response.content).toContain('Paris Target');
+  });
+
+  it('returns weekly plan for "plan"', async () => {
+    const response = await getCoachResponse('Create a weekly plan', ctx);
+    expect(response.content).toContain('Weekly Eco-Plan');
+    expect(response.content).toContain('Monday');
+  });
+
+  it('returns forecast for "forecast"', async () => {
+    const response = await getCoachResponse('What is my forecast?', ctx);
+    expect(response.content).toContain('Forecast');
+    expect(response.content).toContain('Days of Data');
+  });
+
+  it('returns tips for "suggest"', async () => {
+    const response = await getCoachResponse('Can you suggest improvements?', ctx);
+    expect(response.content).toContain('Sustainability Tips');
+    expect(response.content).toContain('score');
+  });
+
+  it('returns context-aware default for unmatched', async () => {
+    const response = await getCoachResponse('Hello!', ctx);
+    expect(response.content).toContain('Footprint Summary');
+    expect(response.suggestions.length).toBeGreaterThan(0);
+  });
+
+  it('works without user context (graceful degradation)', async () => {
+    const response = await getCoachResponse('reduce my footprint');
+    expect(response.content.length).toBeGreaterThan(50);
+    expect(response.suggestions.length).toBeGreaterThan(0);
+  });
+
+  it('all responses have non-empty content and suggestions', async () => {
+    const intents = ['reduce', 'compare', 'plan', 'forecast', 'suggest', 'hello'];
+    for (const msg of intents) {
+      const res = await getCoachResponse(msg, ctx);
+      expect(res.content.length).toBeGreaterThan(50);
+      expect(res.suggestions.length).toBeGreaterThanOrEqual(3);
+    }
+  }, 15000);
+
+  it('personalizes response with user streak data', async () => {
+    const customCtx: UserContext = {
+      user: createMockUser({ streakDays: 30 }),
+      footprintData: createMockFootprint(90),
+    };
+    const response = await getCoachResponse('reduce my footprint', customCtx);
+    expect(response.content).toContain('30-day streak');
+  });
+
+  it('includes user sustainability score in tips', async () => {
+    const response = await getCoachResponse('give me tips', ctx);
+    expect(response.content).toContain('72');
+  });
+});
+
+/* ─── Utility Function Tests ─── */
+
 describe('generateChallengeDescription', () => {
-  it('returns transportation-specific description', () => {
-    const d = generateChallengeDescription('transportation');
-    expect(d.toLowerCase()).toContain('transportation');
+  it('returns transportation description', () => {
+    const desc = generateChallengeDescription('transportation');
+    expect(desc).toContain('commute patterns');
   });
-  it('returns food-specific description', () => {
-    const d = generateChallengeDescription('food');
-    expect(d.toLowerCase()).toContain('nutrition');
+
+  it('returns food description', () => {
+    const desc = generateChallengeDescription('food');
+    expect(desc).toContain('dietary tracking');
   });
-  it('returns energy-specific description', () => {
-    const d = generateChallengeDescription('energy');
-    expect(d.toLowerCase()).toContain('energy');
+
+  it('returns energy description', () => {
+    const desc = generateChallengeDescription('energy');
+    expect(desc).toContain('energy usage');
   });
-  it('returns personalized default for unknown category', () => {
-    const d = generateChallengeDescription('unknown-category');
-    expect(d.toLowerCase()).toContain('personalized');
-  });
-  it('returns non-empty string for all categories', () => {
-    ['transportation', 'food', 'energy', 'anything'].forEach((cat) => {
-      expect(generateChallengeDescription(cat).length).toBeGreaterThan(10);
-    });
+
+  it('returns default for unknown category', () => {
+    const desc = generateChallengeDescription('unknown');
+    expect(desc).toContain('personalized');
   });
 });
 
 describe('generateReportSummary', () => {
-  it('uses "encouraging" for positive reduction', () => {
-    expect(generateReportSummary(100, 15, 'transportation')).toContain('encouraging');
+  it('generates encouraging summary for positive reduction', () => {
+    const summary = generateReportSummary(300, 15.5, 'transportation');
+    expect(summary).toContain('encouraging');
+    expect(summary).toContain('15.5%');
+    expect(summary).toContain('transportation');
   });
-  it('includes reduction percentage in output', () => {
-    expect(generateReportSummary(100, 15, 'food')).toContain('15.0%');
+
+  it('generates insightful summary for zero reduction', () => {
+    const summary = generateReportSummary(500, 0, 'food');
+    expect(summary).toContain('insightful');
+    expect(summary).toContain('areas identified');
   });
-  it('uses "insightful" for zero/negative reduction', () => {
-    expect(generateReportSummary(100, 0, 'energy')).toContain('insightful');
-  });
-  it('mentions top category', () => {
-    expect(generateReportSummary(100, 5, 'transportation')).toContain('transportation');
-  });
-  it('includes total emissions value', () => {
-    expect(generateReportSummary(250.5, 5, 'food')).toContain('250.5');
-  });
-  it('mentions Gemini AI for personalization cue', () => {
-    expect(generateReportSummary(100, 5, 'food')).toContain('Gemini AI');
+
+  it('includes total emissions in summary', () => {
+    const summary = generateReportSummary(123.4, 5, 'electricity');
+    expect(summary).toContain('123.4');
   });
 });

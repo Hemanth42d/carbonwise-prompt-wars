@@ -49,25 +49,28 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
  * @param fn - Pure function to memoize
  * @param maxSize - Maximum cache entries before oldest is evicted (default: 50)
  */
-export function memoize<T extends (...args: unknown[]) => unknown>(
-  fn: T,
+export function memoize<TArgs extends unknown[], TReturn>(
+  fn: (...args: TArgs) => TReturn,
   maxSize = 50
-): T {
-  const cache = new Map<string, unknown>();
+): (...args: TArgs) => TReturn {
+  const cache = new Map<string, TReturn>();
 
-  return ((...args: Parameters<T>): ReturnType<T> => {
+  return (...args: TArgs): TReturn => {
     const key = JSON.stringify(args);
     if (cache.has(key)) {
-      return cache.get(key) as ReturnType<T>;
+      return cache.get(key) as TReturn;
     }
     const result = fn(...args);
     /* Evict oldest entry if cache is full */
     if (cache.size >= maxSize) {
-      cache.delete(cache.keys().next().value as string);
+      const firstKey = cache.keys().next().value;
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
     }
     cache.set(key, result);
-    return result as ReturnType<T>;
-  }) as T;
+    return result;
+  };
 }
 
 /**

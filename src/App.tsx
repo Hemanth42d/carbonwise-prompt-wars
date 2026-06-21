@@ -110,7 +110,6 @@ const App: React.FC = () => {
       <Header />
       <main
         className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-        role="main"
         id="main-content"
         aria-label="Main application content"
       >
